@@ -8,7 +8,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using static UnityEditor.Progress;
 
-public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerEnterHandler
 {
 	[SerializeField, Range(1, 4)] private int width = 1;
 	[SerializeField, Range(1, 4)] private int height = 1;
@@ -26,65 +26,126 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 	private Vector2 offsetVector = Vector2.zero;
 
+	private RectTransform rectTransform;
+	[SerializeField] RectTransform spriteTransform;
+
+	private bool isHeld = false;
+
 	private void Start()
 	{
-		RectTransform rectTransform = GetComponent<RectTransform>();
+		if (raycaster == null)
+		{
+			raycaster = transform.GetComponentInParent<GraphicRaycaster>();
+		}
+		rectTransform = GetComponent<RectTransform>();
 
 		float x = rectTransform.rect.width / (Width * 2);
 		x *= (Width - 1);
 		float y = rectTransform.rect.height / (Height * 2);
 		y *= (Height - 1);
+		spriteTransform.pivot = new Vector2(0, 1);
+		offsetVector = new Vector2(-1 * x, y);
+	}
 
-		offsetVector = new Vector2(-1 * x, y);	
+	private void Update()
+	{
+		if (isHeld)
+		{
+			if (InputManager.RotateWasPressed)
+			{
+				(width, height) = (height, width);
+				Shape = RotateString(Shape);
+				spriteTransform.Rotate(0, 0, -90);
+				Vector2 pivot = new Vector2(0, 1);
+				switch (spriteTransform.eulerAngles.z)
+				{
+					case 0:
+						pivot = new Vector2(0, 1);
+						break;
+					case 90:
+						pivot = new Vector2(1, 1);
+						break;
+					case 180:
+						pivot = new Vector2(1, 0);
+						break;
+					case 270:
+						pivot = new Vector2(0, 0);
+						break;
+				}
+				spriteTransform.pivot = pivot;
+			}
+		}
 	}
 
 	public void OnBeginDrag(PointerEventData eventData)
 	{
+		rectTransform.pivot = new Vector2(0.5f, 0.5f);
 		GetComponent<Image>().raycastTarget = false;
-	}
-
-	public void OnEndDrag(PointerEventData eventData)
-	{
-		Vector2 vectorCheck = (Vector2)transform.position + offsetVector;
-
+		transform.SetParent(transform.root);
+		transform.SetAsLastSibling();
 		if (currentTile != null)
 		{
 			currentTile.Take(this);
 		}
+		isHeld = true;
+	}
 
-		GameObject uiUnderCursor = GetUIObjectAtScreenPoint(vectorCheck);
+	public void OnEndDrag(PointerEventData eventData)
+	{
+		Vector2 vectorCheck = (Vector2)transform.position;
 
-		if (uiUnderCursor != null)
+		InventoryTile tile = GetUIObjectAtScreenPoint(vectorCheck);
+
+		if (tile != null)
 		{
-			InventoryTile tile;
-			if (tile = uiUnderCursor.GetComponent<InventoryTile>())
+		
+			if (tile.Place(this))
 			{
-				if (tile.Place(this))
-				{
-					currentTile = tile;
-				}
+				currentTile = tile;
 			}
 		}
-		currentTile.Place(this);
-		MoveItem(currentTile);
+		if (currentTile != null)
+		{
+			currentTile.Place(this);
+			MoveItem(currentTile);
+			rectTransform.pivot = new Vector2(0, 1);
+			transform.SetParent(currentTile.transform);
+			rectTransform.anchoredPosition = Vector2.zero;
+			rectTransform.pivot = new Vector2(0.5f, 0.5f);
+			spriteTransform.anchoredPosition = Vector2.zero;
+			spriteTransform.SetParent(transform);
+		}
 		GetComponent<Image>().raycastTarget = true;
+		transform.SetParent(transform.root);
+		transform.SetAsLastSibling();
+		isHeld = false;
 	}
 
 	public void OnDrag(PointerEventData eventData)
 	{
-		float x = eventData.position.x;
-		float y = eventData.position.y;
+		float x = eventData.position.x - 50;
+		float y = eventData.position.y + 50;
 
-		transform.position = new Vector3(x, y, 0);
+		transform.position = new Vector2(x, y);
+
+		Vector2 vectorCheck = (Vector2)transform.position;
+
+		InventoryTile tile = GetUIObjectAtScreenPoint(vectorCheck);
+
+
 	}
 
 	public void MoveItem(InventoryTile tile)
 	{
-		currentTile = tile;
-		transform.position = (Vector2)tile.transform.position - offsetVector;
+		RectTransform thisRect = GetComponent<RectTransform>();
+		RectTransform tileRect = tile.GetComponent<RectTransform>();
+		RectTransform invRect = tile.GetInventory().GetComponent<RectTransform>();
+
+		// Ustaw lokalnie wzglêdem rodzica
+		thisRect.anchoredPosition = tileRect.anchoredPosition - offsetVector + invRect.anchoredPosition;
 	}
 
-	private GameObject GetUIObjectAtScreenPoint(Vector2 screenPoint)
+	private InventoryTile GetUIObjectAtScreenPoint(Vector2 screenPoint)
 	{
 		PointerEventData pointerEventData = new PointerEventData(eventSystem)
 		{
@@ -96,9 +157,57 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 		if (results.Count > 0)
 		{
-			return results[0].gameObject;
+			foreach (RaycastResult result in results)
+			{
+				InventoryTile tile;
+				if (tile = result.gameObject.GetComponent<InventoryTile>())
+				{
+					return tile;
+				}
+			}
 		}
 
 		return null;
+	}
+
+	public void OnPointerEnter(PointerEventData eventData)
+	{
+		
+	}
+
+	private string RotateString(string text)
+	{
+		var lines = text.Split('\n');
+		int rows = lines.Length;
+		int cols = lines.Max(line => line.Length);
+
+		// Wyrównaj d³ugoœci wierszy spacjami
+		for (int i = 0; i < rows; i++)
+		{
+			lines[i] = lines[i].PadRight(cols);
+		}
+
+		char[,] grid = new char[rows, cols];
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < cols; j++)
+			{
+				grid[i, j] = lines[i][j];
+			}
+		}
+
+		// Budujemy wynik
+		string[] rotatedLines = new string[cols];
+		for (int i = 0; i < cols; i++)
+		{
+			char[] newRow = new char[rows];
+			for (int j = 0; j < rows; j++)
+			{
+				newRow[j] = grid[rows - j - 1, i];
+			}
+			rotatedLines[i] = new string(newRow);
+		}
+
+		return string.Join("\n", rotatedLines);
 	}
 }

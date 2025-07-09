@@ -11,16 +11,19 @@ public class InputManager : MonoBehaviour
 
 	public static bool UseWasPressed;
 
+	public static bool RotateWasPressed;
+
 	private InputAction moveAction;
 	private InputAction useAction;
+	private InputAction rotateAction;
 
 	private void Awake()
 	{
 		PlayerInput = GetComponent<PlayerInput>();
 
 		moveAction = PlayerInput.actions["Move"];
-
 		useAction = PlayerInput.actions["Use"];
+		rotateAction = PlayerInput.actions["Rotate"];
 	}
 
 	// Update is called once per frame
@@ -29,5 +32,6 @@ public class InputManager : MonoBehaviour
 		MoveVector = moveAction.ReadValue<Vector2>();
 
 		UseWasPressed = useAction.WasPerformedThisFrame();
+		RotateWasPressed = rotateAction.WasPerformedThisFrame();
 	}
 }
