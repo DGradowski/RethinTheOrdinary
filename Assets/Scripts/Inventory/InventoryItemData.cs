@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Data", menuName = "InventoryItems/InventoryItemData", order = 1)]
 public class InventoryItemData : ScriptableObject
 {
-	private int width = 0;
-	private int height = 0;
-	private string shape = string.Empty;
-	private Sprite sprite = null;
+	[SerializeField, Range(1, 4)] private int width = 1;
+	[SerializeField, Range(1, 4)] private int height = 1;
+	[SerializeField, TextArea(4,4)] private string shape = string.Empty;
+	[SerializeField] private Sprite sprite = null;
 
 	//TODO: ItemType
 
