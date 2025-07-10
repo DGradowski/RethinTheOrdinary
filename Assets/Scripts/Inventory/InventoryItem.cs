@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
+using UnityEngine.WSA;
 using static UnityEditor.Progress;
 
 public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerEnterHandler
@@ -14,13 +15,11 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 	[SerializeField, Range(1, 4)] private int height = 1;
 
 	[TextArea(4, 4)] public string Shape = "####\n####\n####\n####";
+	private string originalShape;
 
 	[SerializeField] private GraphicRaycaster raycaster;
 
 	[SerializeField] private EventSystem eventSystem;
-
-	public int Width { get => width; }
-	public int Height { get => height; }
 
 	[SerializeField] private InventoryTile currentTile;
 
@@ -28,8 +27,19 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 	private RectTransform rectTransform;
 	[SerializeField] RectTransform spriteTransform;
+	[SerializeField] GameObject hitboxPrefab;
+
+	private string lastShape;
+	private float lastRotation;
+	private int lastWidth;
+	private int lastHeight;
 
 	private bool isHeld = false;
+
+	public int Width { get => width; }
+	public int Height { get => height; }
+
+	public Sprite Sprite { get => spriteTransform.GetComponent<Image>().sprite; }
 
 	private void Start()
 	{
@@ -45,6 +55,15 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 		y *= (Height - 1);
 		spriteTransform.pivot = new Vector2(0, 1);
 		offsetVector = new Vector2(-1 * x, y);
+		lastShape = Shape;
+		lastRotation = spriteTransform.eulerAngles.z;
+		lastWidth = Width;
+		lastHeight = Height;
+		originalShape = Shape;
+		for (int i = 0; i < Width * Height; i++)
+		{
+			Instantiate(hitboxPrefab, spriteTransform.transform);
+		}
 	}
 
 	private void Update()
@@ -56,30 +75,22 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 				(width, height) = (height, width);
 				Shape = RotateString(Shape);
 				spriteTransform.Rotate(0, 0, -90);
-				Vector2 pivot = new Vector2(0, 1);
-				switch (spriteTransform.eulerAngles.z)
-				{
-					case 0:
-						pivot = new Vector2(0, 1);
-						break;
-					case 90:
-						pivot = new Vector2(1, 1);
-						break;
-					case 180:
-						pivot = new Vector2(1, 0);
-						break;
-					case 270:
-						pivot = new Vector2(0, 0);
-						break;
-				}
-				spriteTransform.pivot = pivot;
+				UpdateImagePivot();
+			}
+			Vector2 vectorCheck = (Vector2)transform.position - offsetVector;
+			InventoryTile tile = GetUIObjectAtScreenPoint(vectorCheck);
+			if (tile != null)
+			{
+				tile.DrawOnTile(this);
 			}
 		}
+		
 	}
 
 	public void OnBeginDrag(PointerEventData eventData)
 	{
 		rectTransform.pivot = new Vector2(0.5f, 0.5f);
+		UpdateImageHitbox(true);
 		GetComponent<Image>().raycastTarget = false;
 		transform.SetParent(transform.root);
 		transform.SetAsLastSibling();
@@ -92,20 +103,28 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 	public void OnEndDrag(PointerEventData eventData)
 	{
-		Vector2 vectorCheck = (Vector2)transform.position;
+		Vector2 vectorCheck = (Vector2)transform.position - offsetVector;
 
 		InventoryTile tile = GetUIObjectAtScreenPoint(vectorCheck);
 
 		if (tile != null)
 		{
-		
 			if (tile.Place(this))
 			{
 				currentTile = tile;
+				lastShape = Shape;
+				lastRotation = spriteTransform.eulerAngles.z;
+				lastWidth = Width;
+				lastHeight = Height;
 			}
 		}
 		if (currentTile != null)
 		{
+			Shape = lastShape;
+			spriteTransform.eulerAngles = new Vector3(0, 0, lastRotation);
+			width = lastWidth;
+			height = lastHeight;
+			UpdateImagePivot();
 			currentTile.Place(this);
 			MoveItem(currentTile);
 			rectTransform.pivot = new Vector2(0, 1);
@@ -119,6 +138,7 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 		transform.SetParent(transform.root);
 		transform.SetAsLastSibling();
 		isHeld = false;
+		UpdateImageHitbox(false);
 	}
 
 	public void OnDrag(PointerEventData eventData)
@@ -168,6 +188,46 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 		}
 
 		return null;
+	}
+
+	private void UpdateImagePivot()
+	{
+		Vector2 pivot = new Vector2(0, 1);
+		switch (Mathf.Round(spriteTransform.eulerAngles.z))
+		{
+			case 0:
+				pivot = new Vector2(0, 1);
+				break;
+			case 90:
+				pivot = new Vector2(1, 1);
+				break;
+			case 180:
+				pivot = new Vector2(1, 0);
+				break;
+			case 270:
+				pivot = new Vector2(0, 0);
+				break;
+		}
+		spriteTransform.pivot = pivot;
+	}
+
+	private void UpdateImageHitbox(bool enable)
+	{
+		string s = originalShape.Replace("\n", "").Replace("\r", "");
+		for (int i = 0; i < Width * Height; i++)
+		{
+			if (s[i] == '0')
+			{
+				spriteTransform.transform.GetChild(i).GetComponent<Image>().raycastTarget = enable;
+				spriteTransform.transform.GetChild(i).GetComponent<Image>().color = new Color32(255, 255, 255, 0);
+			}
+			else
+			{
+				spriteTransform.transform.GetChild(i).GetComponent<Image>().raycastTarget = true;
+				spriteTransform.transform.GetChild(i).GetComponent<Image>().color = new Color32(255, 255, 255, 255);
+			}
+			
+		}
 	}
 
 	public void OnPointerEnter(PointerEventData eventData)

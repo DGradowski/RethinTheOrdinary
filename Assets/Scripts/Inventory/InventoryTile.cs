@@ -30,4 +30,9 @@ public class InventoryTile : MonoBehaviour
 	{
 		return inventory.PlaceItemOnTile(Row, Column, item);
 	}
+
+	public void DrawOnTile(InventoryItem item)
+	{
+		inventory.StartDrawingTile(Row, Column, item);
+	}
 }

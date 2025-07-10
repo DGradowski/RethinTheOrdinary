@@ -12,8 +12,7 @@ public class InventoryItemData : ScriptableObject
 	[SerializeField] private Sprite sprite = null;
 
 	//TODO: ItemType
-
-	public InventoryItemData(int width, int height, string shape, Sprite sprite)
+	public void Set(int width, int height, string shape, Sprite sprite)
 	{
 		this.width = width;
 		this.height = height;
@@ -23,5 +22,6 @@ public class InventoryItemData : ScriptableObject
 
 	public int Width { get => width; }
 	public int Height { get => height; }
+	public string Shape { get => shape; }
 	public Sprite Sprite { get => sprite; }
 }
