@@ -9,7 +9,9 @@ public class PlayerInteractions : MonoBehaviour
     [SerializeField] private ScrollRect scrollableRect;
     public List<IInteractable> nearbyItems = new List<IInteractable>();
 
-    
+    private IInteractable currentInteractable;
+
+
     void Start()
     {
         
@@ -20,7 +22,7 @@ public class PlayerInteractions : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E)) 
         {
             Debug.Log("E key pressed for interaction");
-            UpdateNearbyItemsUI();
+
         }
     }
 
@@ -30,6 +32,11 @@ public class PlayerInteractions : MonoBehaviour
         {
             nearbyItems.Add(nearbyItem);
             UpdateNearbyItemsUI();
+        }
+        else if (other.TryGetComponent<IInteractable>(out IInteractable interactableItem))
+        {
+            //show interact button
+            currentInteractable = interactableItem;
         }
         else
         {
@@ -55,12 +62,37 @@ public class PlayerInteractions : MonoBehaviour
         
         foreach (PickupableItem item in nearbyItems)
         {
-            Sprite sprite = item.GetComponent<SpriteRenderer>().sprite;
-
-            GameObject UIBlock = Instantiate(item.uiItemPrefab, scrollableRect.content);
-            UIBlock.transform.Find("Sprite").GetComponent<UnityEngine.UI.Image>().sprite = sprite;
+            AddItemToUI(item);
         }
-        
+    }
+
+    void AddItemToUI(PickupableItem item)
+    {
+        Sprite sprite = item.GetComponent<SpriteRenderer>().sprite;
+
+        GameObject UIBlock = Instantiate(item.uiItemPrefab, scrollableRect.content);
+        UIBlock.transform.Find("Sprite").GetComponent<UnityEngine.UI.Image>().sprite = sprite;
+
+        Transform grid = UIBlock.transform.Find("Grid");
+        List<Transform> cells = new List<Transform>();
+        foreach (Transform child in grid)
+        {
+            cells.Add(child);
+        }
+
+        string[] itemShape = item.GetShape();
+        for (int y = 0; y < itemShape.Length; y++)
+        {
+            var row = itemShape[y];
+            for (int x = 0; x < row.Length; x++)
+            {
+                int i = y * row.Length + x;
+                if (row[x] == '#')
+                {
+                    cells[i].GetComponent<UnityEngine.UI.Image>().color = Color.red;
+                }
+            }
+        }
     }
     
     public void TakeItem()
