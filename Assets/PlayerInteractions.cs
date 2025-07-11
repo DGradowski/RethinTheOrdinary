@@ -9,7 +9,9 @@ public class PlayerInteractions : MonoBehaviour
 
     private IInteractable currentInteractable;
 
-
+    const int grid_width = 4;
+    const int inventory_width = 4;
+    const int inventory_height = 9;
     void Start()
     {
         
@@ -84,7 +86,7 @@ public class PlayerInteractions : MonoBehaviour
             var row = itemShape[y];
             for (int x = 0; x < row.Length; x++)
             {
-                int i = y * row.Length + x;
+                int i = y * grid_width + x;
                 if (row[x] == '#')
                 {
                     cells[i].GetComponent<Image>().color = Color.red;
@@ -110,8 +112,20 @@ public class PlayerInteractions : MonoBehaviour
         realItem.Shape = item.ShapeString;
         realItem.Width = item.width;
         realItem.Height = item.height;
-        inventory.GetComponent<Inventory>().PlaceItemOnTile(1, 1, realItem); // tu zmiana jeszcze - to chwilowe to [1,1,]
+        for (int i = 0; i < inventory_height; i++)
+        {
+            for (int j = 0; j < inventory_width; j++)
+            {
+                if (inventory.GetComponent<Inventory>().CanPlace(i, j, realItem))
+                {
+                    inventory.GetComponent<Inventory>().PlaceItemOnTile(i, j, realItem); // tu zmiana jeszcze - to chwilowe to [1,1,]
+                    item.DestroySelf();
+                    return;
+                }
+            }
+        }
+        
 
-        item.DestroySelf();
+        
     }
 }
