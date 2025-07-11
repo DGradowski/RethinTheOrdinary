@@ -107,10 +107,10 @@ public class PlayerInteractions : MonoBehaviour
         GameObject inventory = GameObject.Find("Inventory");
 
         InventoryItem realItem = inventoryItem.GetComponent<InventoryItem>();
-        //realItem.Shape = item.ShapeString;
-        //realItem.width = item.width;
-        //realItem.height = item.height;
-        //inventory.GetComponent<Inventory>().PlaceItemOnTile(1, 1, realItem); // tu zmiana jeszcze - to chwilowe to [1,1,]
+        realItem.Shape = item.ShapeString;
+        realItem.Width = item.width;
+        realItem.Height = item.height;
+        inventory.GetComponent<Inventory>().PlaceItemOnTile(1, 1, realItem); // tu zmiana jeszcze - to chwilowe to [1,1,]
 
         item.DestroySelf();
     }

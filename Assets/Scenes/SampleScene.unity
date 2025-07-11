@@ -1656,13 +1656,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiItemPrefab: {fileID: 6500279934815280963, guid: 5a398a2f95b25ce4bbfeb09a3a584218, type: 3}
   inventoryItemPrefab: {fileID: 3475275997819343445, guid: 8949ac62c71ed8c40977c7aa5dfb233e, type: 3}
-  ShapeString: '##00
+  ShapeString: '##
 
-    ##00
+    #0
 
-    0000
-
-    0000'
+    #0'
+  width: 2
+  height: 3
 --- !u!58 &575582019
 CircleCollider2D:
   m_ObjectHideFlags: 0

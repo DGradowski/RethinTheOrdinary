@@ -36,25 +36,14 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 	private bool isHeld = false;
 
-	public int Width { get => width; }
-	public int Height { get => height; }
+	public int Width { get => width; set => width = value; }
+	public int Height { get => height;  set => height = value; }
 
 	public Sprite Sprite { get => spriteTransform.GetComponent<Image>().sprite; }
 
-	private void Start()
+	private void Awake()
 	{
-		if (raycaster == null)
-		{
-			raycaster = transform.GetComponentInParent<GraphicRaycaster>();
-		}
 		rectTransform = GetComponent<RectTransform>();
-
-		float x = rectTransform.rect.width / (Width * 2);
-		x *= (Width - 1);
-		float y = rectTransform.rect.height / (Height * 2);
-		y *= (Height - 1);
-		spriteTransform.pivot = new Vector2(0, 1);
-		offsetVector = new Vector2(-1 * x, y);
 		lastShape = Shape;
 		lastRotation = spriteTransform.eulerAngles.z;
 		lastWidth = Width;
@@ -64,6 +53,20 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 		{
 			Instantiate(hitboxPrefab, spriteTransform.transform);
 		}
+	}
+
+	private void Start()
+	{
+		if (raycaster == null)
+		{
+			raycaster = transform.GetComponentInParent<GraphicRaycaster>();
+		}
+		float x = rectTransform.rect.width / (Width * 2);
+		x *= (Width - 1);
+		float y = rectTransform.rect.height / (Height * 2);
+		y *= (Height - 1);
+		spriteTransform.pivot = new Vector2(0, 1);
+		offsetVector = new Vector2(-1 * x, y);
 	}
 
 	private void Update()
