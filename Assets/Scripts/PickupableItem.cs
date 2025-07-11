@@ -1,13 +1,19 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class PickupableItem : MonoBehaviour, IInteractable
 {
     [SerializeField] public GameObject uiItemPrefab;
-    [TextArea(4, 4)] public string ShapeString = "##..\n##..\n....\n....";
+    [SerializeField] public GameObject inventoryItemPrefab;
     
+    [TextArea(4, 4)] public string ShapeString = "##..\n##..\n....\n....";
+    [SerializeField, Range(1, 4)] public int width = 2;
+    [SerializeField, Range(1, 4)] public int height = 2;
+
     void IInteractable.Interact()
     {
         Debug.Log("Interaction with item");
@@ -27,5 +33,10 @@ public class PickupableItem : MonoBehaviour, IInteractable
             shape[i] = shape[i].Replace("\r", "");
         }
         return shape;
+    }
+
+    public void DestroySelf()
+    {
+        Destroy(gameObject);
     }
 }

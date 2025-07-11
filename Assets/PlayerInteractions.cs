@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
-
 public class PlayerInteractions : MonoBehaviour
 {
     [SerializeField] private ScrollRect scrollableRect;
@@ -89,14 +87,31 @@ public class PlayerInteractions : MonoBehaviour
                 int i = y * row.Length + x;
                 if (row[x] == '#')
                 {
-                    cells[i].GetComponent<UnityEngine.UI.Image>().color = Color.red;
+                    cells[i].GetComponent<Image>().color = Color.red;
                 }
             }
         }
+
+        GameObject interactButton = UIBlock.transform.Find("InteractButton").gameObject;
+        interactButton.GetComponent<Button>().onClick.AddListener(() => 
+        {
+            TakeItem(item);
+            
+        });
     }
     
-    public void TakeItem()
+    public void TakeItem(PickupableItem item)
     {
-        Debug.Log("Taking item");
+        Canvas canvas = FindObjectOfType<Canvas>();
+        GameObject inventoryItem = Instantiate(item.inventoryItemPrefab, canvas.transform);
+        GameObject inventory = GameObject.Find("Inventory");
+
+        InventoryItem realItem = inventoryItem.GetComponent<InventoryItem>();
+        //realItem.Shape = item.ShapeString;
+        //realItem.width = item.width;
+        //realItem.height = item.height;
+        //inventory.GetComponent<Inventory>().PlaceItemOnTile(1, 1, realItem); // tu zmiana jeszcze - to chwilowe to [1,1,]
+
+        item.DestroySelf();
     }
 }
