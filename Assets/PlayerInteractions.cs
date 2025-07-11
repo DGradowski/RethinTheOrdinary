@@ -112,6 +112,7 @@ public class PlayerInteractions : MonoBehaviour
         realItem.Shape = item.ShapeString;
         realItem.Width = item.width;
         realItem.Height = item.height;
+
         for (int i = 0; i < inventory_height; i++)
         {
             for (int j = 0; j < inventory_width; j++)
@@ -124,8 +125,11 @@ public class PlayerInteractions : MonoBehaviour
                 }
             }
         }
-        
+        // If we reach here, it means there was no space in the inventory
+        Destroy(inventoryItem);
+        Debug.Log("No space in inventory for item: " + item.name);
 
-        
+
+
     }
 }
