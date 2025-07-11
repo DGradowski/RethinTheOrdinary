@@ -109,21 +109,28 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
 		if (tile != null)
 		{
-			if (tile.Place(this))
+			if (tile.CheckIfCanPlace(this))
 			{
 				currentTile = tile;
 				lastShape = Shape;
 				lastRotation = spriteTransform.eulerAngles.z;
 				lastWidth = Width;
 				lastHeight = Height;
+				tile.Place(this);
 			}
 		}
-		if (currentTile != null)
+		GetComponent<Image>().raycastTarget = true;
+		transform.SetParent(transform.root);
+		transform.SetAsLastSibling();
+		UpdateImageHitbox(false);
+		isHeld = false;
+	}
+
+	public void Place(InventoryTile tile)
+	{
+		if (tile != null)
 		{
-			Shape = lastShape;
-			spriteTransform.eulerAngles = new Vector3(0, 0, lastRotation);
-			width = lastWidth;
-			height = lastHeight;
+			currentTile = tile;
 			UpdateImagePivot();
 			currentTile.Place(this);
 			MoveItem(currentTile);
@@ -137,7 +144,6 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 		GetComponent<Image>().raycastTarget = true;
 		transform.SetParent(transform.root);
 		transform.SetAsLastSibling();
-		isHeld = false;
 		UpdateImageHitbox(false);
 	}
 

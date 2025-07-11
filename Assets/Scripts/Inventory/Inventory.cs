@@ -117,6 +117,7 @@ public class Inventory : MonoBehaviour
 				}
 			}
 		}
+		item.Place(Tiles[row, col]);
 		return true;
     }
 
